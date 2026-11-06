@@ -1,0 +1,3 @@
+*.pdf binary
+# Preserve the official license HTML byte-for-byte (including CRLF).
+data/CDLA-Sharing-1.0.html -text -whitespace

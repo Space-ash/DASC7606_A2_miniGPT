@@ -1,0 +1,2 @@
+68f27acf7a4c3665e8a452e8561622cb1b2bed0d4122bd08a59127b7ab8ea315  assignment2-starter-v1.0.0.zip
+59ab05aa2f75a9d589d5a26a65d10bdde1f7f88562af163534f29905002c7a20  assignment2-data-v1.0.0.zip
