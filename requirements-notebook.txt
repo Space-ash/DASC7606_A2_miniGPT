@@ -1,0 +1,5 @@
+# Optional interactive notebook kernel and format validator.
+# The assignment's original requirements.txt remains unchanged.
+-r requirements.txt
+ipykernel>=6.29,<8
+nbformat>=5.10,<6

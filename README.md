@@ -10,6 +10,19 @@ DASC7606 Assignment 2 的个人工作区，基于官方 v1.0.0 student starter�
 
 ## 工作区使用
 
+### Notebook 交互入口
+
+可直接打开 [MiniGPT 实验工作台](notebooks/Assignment2_Workbench.ipynb)，按中文说明联动现有脚本，后续在 GPU 上运行后展示学习曲线、学习率、单步吞吐、三组完整 FP32 评估和固定提示词续写。
+Notebook 目前未执行，所有安装、下载、测试、训练和打包开关默认关闭；模型的四个 TODO 仍需完成。使用方法见 [Notebook 说明](notebooks/README.md)。
+
+```sh
+source .venv/bin/activate
+python -m pip install -r requirements-notebook.txt
+# 在 VS Code 中选择该 Python 环境作为 Notebook 内核。
+```
+
+Notebook 是辅助工具；正式提交仍按官方脚本打包代码、单一 checkpoint、三组证据和 4–5 页 PDF。
+
 - `src/`：模型、训练、生成、评估；从 `src/model.py` 开始。
 - `configs/`：官方 baseline 与 smoke 配置；baseline 保持不变。
 - `scripts/`、`tests/`：官方脚本与公开测试；新增 `scripts/download_data.py` 用于固定数据下载与校验。
