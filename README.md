@@ -6,6 +6,8 @@ DASC7606 Assignment 2 的个人工作区，基于官方 v1.0.0 student starter�
 
 当前状态：保留 `src/model.py` 的四个 TODO，尚未实现或训练模型。先完成 TODO，再运行测试与 smoke run。
 
+初始化检查（2026-11-06，Mac 本地 CPU）：已创建 `.venv`，Python 3.12.14 / PyTorch 2.10.0；`pip check` 与官方 `scripts/check_setup.py` 均通过，baseline 构造参数量为 13,891,584。此检查验证环境与固定数据，不代表 TODO 正确性测试通过；尚未运行公开模型测试、smoke training 或正式训练。CUDA 训练环境需在对应 GPU 机器另行配置。
+
 ## 工作区使用
 
 - `src/`：模型、训练、生成、评估；从 `src/model.py` 开始。
