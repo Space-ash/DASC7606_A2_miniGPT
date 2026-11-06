@@ -13,7 +13,7 @@ python -m pip install -r requirements-notebook.txt
 
 用 VS Code 打开 Notebook，在右上角选择此环境作为内核，按顺序运行。独立使用 JupyterLab 时可自行安装 `jupyterlab` 后从项目根目录启动 `jupyter lab`。
 
-当前本地独立克隆的 `.venv` 复用工作区上一层已建好的环境（本地符号链接，未加入 Git）；换机器后请重新建立自己的环境。
+本地 `.venv` 可以复用已有 Python 环境（本地符号链接不加入 Git）。移动项目后应确认环境链接仍有效；换机器后请重新建立自己的环境。
 
 ## GPU / Colab
 
