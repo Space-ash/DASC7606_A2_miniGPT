@@ -1,5 +1,7 @@
 # Report 提纲（4–5 页）
 
+报告继续按所有者于 2026-11-13 确认的 **4–5 页**准备；最新公开 v1.1.1 仍写主报告最多 2 页，提交前按 Moodle/教师确认。扩展分析另写 `extension_report.pdf`，不要用扩展包替代核心包。
+
 本项目采用所有者提供的 4–5 页更新；页数分配是建议，不是额外课程规定。尚未运行实验，不填写虚构结果。
 
 1. **方法（约 1 页）**：next-token objective、causal attention、MLP、pre-norm residual、生成流程与实现验证。

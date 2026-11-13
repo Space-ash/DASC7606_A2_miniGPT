@@ -17,7 +17,7 @@ python -m pip install -r requirements-notebook.txt
 
 ## GPU / Colab
 
-1. 在 GPU Notebook 环境打开此文件，选择支持 BF16 的 CUDA GPU。
+1. 在 GPU Notebook 环境打开此文件，选择可运行官方配置的 CUDA GPU；符合要求的 Colab T4/BF16 运行可接受，不要求原生 BF16 硬件支持。
 2. 没有项目时，在第 1 节设置 `CLONE_IF_MISSING = True`，或填写已有项目的 `PROJECT_DIR`。
 3. 按 GPU 硬件安装适配的 PyTorch 2.10.0；按需打开依赖安装、固定数据下载和 setup 检查。
 4. 先在 `src/model.py` 完成四个 TODO，再运行测试和 smoke run。
@@ -31,6 +31,13 @@ python -m pip install -r requirements-notebook.txt
 
 ## 提交与版本管理
 
-报告仍为 **4–5 页 PDF**；Notebook 是辅助工具，官方打包脚本不自动包含 `.ipynb`。可复现模型代码应保存在 `src/`，实际命令写进根目录 README。
+报告按所有者再次确认仍为 **4–5 页 PDF**（最新版公开材料仍为最多 2 页，存在冲突，最终按 Moodle/教师确认）；Notebook 是辅助工具，官方打包脚本不自动包含 `.ipynb`。可复现模型代码应保存在 `src/`，实际命令写进根目录 README。
 
 公开 Notebook 前清空输出和真实学号。Notebook 当前所有代码单元的 `execution_count` 为 `null`，`outputs` 为空；未执行测试、采样或训练。
+
+
+## v1.1.1 更新
+
+核心四部分各 20 分、扩展 20 分，共 100 分；不做扩展最高 80/100。没有固定 loss/CE/PPL 阈值。
+截止前允许修订重交；提交尝试被锁定时联系 TA。截止仍为 2026-11-22 23:59 HKT。
+Notebook 新增默认关闭的扩展打包入口；扩展必须独立报告和 ZIP，不能替代核心三次训练与核心 ZIP。

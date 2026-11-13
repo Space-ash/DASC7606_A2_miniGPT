@@ -1,8 +1,8 @@
 # DASC7606_A2_miniGPT
 
-DASC7606 Assignment 2 的个人工作区，基于官方 v1.0.0 student starter。
+DASC7606 Assignment 2 的个人工作区，已同步官方 v1.1.1（2026-11-13）说明与扩展工具；核心训练器内部版本仍为 v1.0.0。
 
-**报告页数采用项目所有者提供的更新：4–5 页。** 官方原始 PDF 和 README 的两页规定是旧要求。
+**本项目报告仍保留 4–5 页，按所有者于 2026-11-13 再次确认的要求。** 最新公开 v1.1.1 仍规定主报告最多 2 页，两者存在冲突；这里不把 4–5 页描述为教师公开规定，最终请按 Moodle/教师确认的要求提交。官方原文保留在 `docs/UPSTREAM_README.md`、`RUBRIC.md` 和更新后的 PDF。
 
 当前状态：保留 `src/model.py` 的四个 TODO，尚未实现或训练模型。先完成 TODO，再运行测试与 smoke run。
 
@@ -56,29 +56,60 @@ python -m src.train --config configs/model_experiment.yaml --out_dir outputs/mod
 python -m src.train --config configs/optimizer_experiment.yaml --out_dir outputs/optimizer_experiment --device cuda
 ```
 
+- [2026-11-13 更新对照](docs/UPSTREAM_UPDATE_2026-11-13.md)
+- [最新评分细则](RUBRIC.md)
+- [扩展任务与独立提交](EXTENSION.md)
 - [作业要求与进度](docs/ASSIGNMENT_NOTES.md)
 - [4–5 页报告提纲](docs/REPORT_OUTLINE.md)
 - [官方 PDF](docs/DASC7606_Assignment_2.pdf)
-- [官方 README 原件](docs/UPSTREAM_README.md)（含旧页数规定）
+- [官方 README 原件](docs/UPSTREAM_README.md)（v1.1.1 原文，含公开的两页规定）
 
 提交前在本 README 中补充实际环境、三个 run 的精确命令与最终 checkpoint 选择理由。
 
+
+## 2026-11-13 同步要点
+
+- 核心四部分（实现、训练/推理、受控实验、报告）各 20 分，加扩展探索 20 分，共 100 分；不做扩展最高为 80/100。
+- 扩展按动机、实现、实验证据、分析各 5 分评分。负结果也可以获得满分；没有固定 loss/CE/PPL 阈值或分数档位。
+- 合规的 Colab T4/BF16 结果可接受，不要求原生 BF16 硬件支持，不需换 GPU 重跑。保持 baseline 不变；若官方训练器不能执行 BF16，应先联系 TA。
+- 截止前允许修订/重新提交；已锁定的尝试联系 TA 重开。截止仍为 2026-11-22 23:59 HKT。
+- 核心代码、数据、tokenizer、baseline、三次 run 和核心 ZIP 格式不变。旧版合规结果继续有效，不因本次更新重训。
+- 扩展另交 `STUDENT_ID_extension.zip`，含独立 `extension_report.pdf`、README、code、configs、results；不能替代核心 ZIP，每个压缩包各不超过 100 MB。
+
+```sh
+python scripts/package_extension.py --directory extension --student-id YOUR_STUDENT_ID --out YOUR_STUDENT_ID_extension.zip
+python scripts/package_extension.py --check YOUR_STUDENT_ID_extension.zip
+```
+
+Notebook 已加入扩展说明与默认关闭的打包入口，现有训练开关继续默认关闭。核心检查器和模型实现没有被本次同步替换。
+
 ---
 
-以下为基于官方 README 的运行说明，报告长度已按上述更新调整。
+以下为最新官方 v1.1.1 运行说明原文（其中主报告两页规定与本项目保留的 4–5 页要求有冲突，见顶部说明）。
 
 **Assignment released 29 October 2026. Due Sunday, 22 November 2026,
 23:59 Hong Kong time (UTC+8).**
 
-Submit one checked ZIP (maximum 100 MB) through your course's Moodle assignment.
-There is one final submission attempt: saving a draft is not submitting it.
-Check all files before clicking **Submit assignment**.
+**Updated 13 November 2026 (v1.1.1).** Four core parts are worth **20 marks each**:
+implementation, training/inference, controlled experiments, and report writing.
+An additional **20 marks for extension/exploration** are available within Part 3.
+The assignment total is **100, not 120**. See [the full rubric and update notice](RUBRIC.md).
 
-The marking split follows Assignment 1: **code and model performance 80 marks;
-report and reproducibility 20 marks**. Code/model assessment covers correctness,
-the baseline and controlled runs, reproducible training evidence, and performance
-on unseen text. The report must explain methods, comparisons, curves, generations
-and limitations in 4–5 pages (updated requirement provided by the project owner).
+**Clarification:** completed Colab T4/BF16 runs that meet the assignment
+requirements are accepted without rerunning on another GPU. There are **no fixed
+loss, cross-entropy or perplexity thresholds for grades**. Assessment focuses on
+implementation correctness and the quality of the experiments and analysis.
+
+Submit your checked core ZIP (`STUDENT_ID.zip`) and, if attempting the extension,
+a separate `STUDENT_ID_extension.zip`. Each file must be at most 100 MB.
+The core report remains at most two pages; put extension analysis in a separate
+`extension_report.pdf`. Already completed compliant core runs remain valid: this
+update does not require retraining or repackaging a valid core submission.
+
+Revision/resubmission before the deadline is permitted, including for students
+who have already submitted. If Moodle has locked your submitted attempt, contact
+the TA to reopen it. A saved draft is not a final submission: verify **Submitted
+for grading** after your final upload. Keep your core ZIP when adding the extension.
 
 Late penalty: up to 1 day 10%; up to 2 days 20%; up to 7 days 50%; more than
 7 days 100%. Late submissions close on 29 November 2026 at 23:59 HKT.
@@ -88,17 +119,18 @@ This repository contains only student starter code, public tests and utilities.
 The fixed data bundle is available from the versioned release below. No teacher solutions,
 reference weights, hidden evaluation data or private grading materials are included.
 
-## Downloads (v1.0.0)
+## Downloads (v1.1.1; fixed data unchanged)
 
-- [Starter code ZIP](https://github.com/ludunjie1219/DASC7606-Assignment2/releases/download/v1.0.0/assignment2-starter-v1.0.0.zip)
+- [Starter code ZIP](https://github.com/ludunjie1219/DASC7606-Assignment2/releases/download/v1.1.1/assignment2-starter-v1.1.1.zip)
 - [Fixed data ZIP](https://github.com/ludunjie1219/DASC7606-Assignment2/releases/download/v1.0.0/assignment2-data-v1.0.0.zip)
-- [SHA-256 checksums](https://github.com/ludunjie1219/DASC7606-Assignment2/releases/download/v1.0.0/SHA256SUMS.txt)
-- [Assignment slides](https://github.com/ludunjie1219/DASC7606-Assignment2/releases/download/v1.0.0/DASC7606_Assignment_2.pdf)
-- [Release notes](https://github.com/ludunjie1219/DASC7606-Assignment2/releases/tag/v1.0.0)
+- [SHA-256 checksums](https://github.com/ludunjie1219/DASC7606-Assignment2/releases/download/v1.1.1/SHA256SUMS.txt)
+- [Updated assignment slides](https://github.com/ludunjie1219/DASC7606-Assignment2/releases/download/v1.1.1/DASC7606_Assignment_2_v1.1.1.pdf)
+- [Release notes](https://github.com/ludunjie1219/DASC7606-Assignment2/releases/tag/v1.1.1)
 
-Use both ZIP files from this version. The GitHub-generated source archives do not
-include the data bundle. If using Git instead, check out tag `v1.0.0` and download
-the data ZIP separately.
+Use the v1.1.1 starter with the unchanged v1.0.0 data ZIP. The GitHub-generated
+source archives do not include data. If using Git, check out tag `v1.1.1` and
+download the data ZIP separately. Do not overwrite your completed `src/model.py`
+with the starter: existing v1.0.0 training code and core ZIPs remain accepted.
 
 ## What you will do
 
@@ -116,7 +148,8 @@ format and data pipeline are complete. Do not replace attention with a built-in
 complete attention module or use a complete pretrained model. Preserve public
 class/method signatures and checkpoint key names. The current evaluator supports
 this GPT architecture family with configurable depth, width and head count, not
-arbitrary architectures; discuss changes outside that family with the TA first.
+arbitrary architectures. Novel architectures belong in the separate extension
+package, not the core checkpoint. See [EXTENSION.md](EXTENSION.md).
 
 ## 1. Environment
 
@@ -126,7 +159,7 @@ compatibility with any university cluster image. CPU is supported for correctnes
 tests and the smoke run; the scripts currently support `cpu` and `cuda`, not MPS.
 
 ```sh
-python3.12 -m venv .venv
+python3.13 -m venv .venv
 source .venv/bin/activate
 # Install PyTorch 2.10.0 for your hardware using the official selector:
 # https://pytorch.org/get-started/locally/
@@ -135,7 +168,15 @@ python -m pip install -r requirements.txt
 
 Environment installation may require Internet access. The training workflow does
 not. The launch scripts do not install packages or allocate a server for you.
-CUDA baseline uses BF16; GPUs without BF16 need a separately checked configuration.
+CUDA baseline uses BF16. **Native hardware BF16 support is not a grading
+requirement. Colab T4/BF16 runs are accepted** when the released trainer works
+with the required baseline configuration, fixed data/tokenizer and token budget,
+and the actual environment and run evidence are recorded accurately. If you
+already completed such runs, **you do not need to rerun them on another GPU**.
+Public tests and format checks remain useful checks, not guarantees of a grade.
+This clarification does not waive implementation or experiment requirements or
+authorize changing the baseline configuration. If the trainer cannot execute
+BF16 in your environment, contact the TA before changing its precision setting.
 
 ## 2. Obtain and verify the fixed data
 
@@ -148,8 +189,8 @@ sha256sum -c SHA256SUMS.txt
 # macOS alternative:
 shasum -a 256 -c SHA256SUMS.txt
 
-unzip assignment2-starter-v1.0.0.zip
-cd assignment2-starter-v1.0.0
+unzip assignment2-starter-v1.1.1.zip
+cd assignment2-starter-v1.1.1
 unzip ../assignment2-data-v1.0.0.zip
 ```
 
@@ -229,8 +270,11 @@ Complete a baseline, one model-side experiment and one
 optimization-side experiment, each with the same processed-token budget. Copy the
 baseline YAML and change one factor at a time. Keep vocabulary and context fixed;
 stay within the 20M-parameter loader limit and the supported architecture family.
-Record a hypothesis before running, compare validation results and fixed-prompt
-continuations, and discuss failures. Extra experiments are optional.
+Each required experiment changes one factor relative to the original baseline,
+not relative to the other experiment. Record a hypothesis, compare validation
+results and fixed-prompt continuations, and discuss failures. Additional runs,
+combined changes and recent methods may be explored for the extension marks;
+there is no maximum number of experiments. Quality matters more than quantity.
 
 Train each config into its own directory, then run plotting, sampling and public
 evaluation as above. Select your final checkpoint using public validation only.
@@ -238,7 +282,7 @@ Do not treat grammatical sentences as proof of narrative consistency.
 
 ## 6. Prepare a submission
 
-Create `report.pdf` (4–5 pages; updated requirement): implementation/method, controlled experiment
+Create `report.pdf` (up to two pages): implementation/method, controlled experiment
 table and analysis, curves, representative continuations, limitations and
 reproducibility. Include all code needed to reproduce the selected model.
 
