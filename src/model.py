@@ -44,8 +44,30 @@ class CausalSelfAttention(nn.Module):
                                                dtype=torch.bool).tril(), persistent=False)
 
     def forward(self, x):
-        """TODO 1: accept [B,T,C]; project Q/K/V; split heads; scale dot products; mask future keys; softmax over keys; attention dropout; merge heads; output projection and residual dropout. Use the provided layers/mask. Return [B,T,C]. Implement explicit attention, not SDPA or MultiheadAttention."""
-        raise NotImplementedError("CausalSelfAttention.forward")
+        """Apply explicit multi-head causal self-attention to [B, T, C]."""
+        B, T, C = x.shape
+        n_head = self.config.n_head
+        head_size = C // n_head
+
+        # Project each token to queries, keys and values, each of shape [B, T, C].
+        q, k, v = self.c_attn(x).split(C, dim=-1)
+        # Split features into heads: [B, T, C] -> [B, n_head, T, head_size].
+        q = q.view(B, T, n_head, head_size).transpose(1, 2)
+        k = k.view(B, T, n_head, head_size).transpose(1, 2)
+        v = v.view(B, T, n_head, head_size).transpose(1, 2)
+
+        # Compute scaled query-key scores: [B, n_head, T, T].
+        scores = (q @ k.transpose(-2, -1)) / math.sqrt(head_size)
+        # Block future keys; the [T, T] mask broadcasts over batches and heads.
+        scores = scores.masked_fill(~self.mask[:T, :T], float("-inf"))
+        # Normalize over key positions, then apply attention dropout.
+        weights = self.attn_dropout(F.softmax(scores, dim=-1))
+        y = weights @ v
+
+        # Merge heads; contiguous() makes the transposed tensor safe to view.
+        y = y.transpose(1, 2).contiguous().view(B, T, C)
+        # Mix information from all heads and regularize the output.
+        return self.resid_dropout(self.c_proj(y))
 
 
 class MLP(nn.Module):
@@ -56,8 +78,16 @@ class MLP(nn.Module):
         self.dropout = nn.Dropout(config.dropout)
 
     def forward(self, x):
-        """TODO 2: apply the provided expansion layer, GELU, projection layer and dropout in that order; preserve [B,T,C]."""
-        raise NotImplementedError("MLP.forward")
+        """Transform each token's features independently, preserving [B, T, C]."""
+        # Expand the feature dimension: [B, T, C] -> [B, T, 4 * C].
+        x = self.c_fc(x)
+        # Apply a nonlinear activation without changing the shape.
+        x = F.gelu(x)
+        # Project back to the model width: [B, T, 4 * C] -> [B, T, C].
+        x = self.c_proj(x)
+        # Randomly zero output elements during training for regularization.
+        x = self.dropout(x)
+        return x
 
 
 class Block(nn.Module):
@@ -69,8 +99,12 @@ class Block(nn.Module):
         self.mlp = MLP(config)
 
     def forward(self, x):
-        """TODO 3: implement a pre-normalized attention residual followed by a pre-normalized MLP residual, using the updated residual stream for the second normalization."""
-        raise NotImplementedError("Block.forward")
+        """Apply pre-normalized attention and MLP with residual connections."""
+        # Normalize the input, then add the attention output to the residual stream.
+        x = x + self.attn(self.ln_1(x))
+        # Normalize the updated stream before the MLP and its residual addition.
+        x = x + self.mlp(self.ln_2(x))
+        return x
 
 
 class GPT(nn.Module):
@@ -116,5 +150,57 @@ class GPT(nn.Module):
     @torch.no_grad()
     def generate(self, idx, max_new_tokens, temperature=1.0, top_k=None,
                  eos_id=None, generator=None):
-        """TODO 4: validate nonempty prompts, nonnegative length, finite positive temperature and positive optional top_k. Temporarily use eval mode and restore the prior mode even on failure. Autoregressively crop context, take last-position logits, apply temperature and optional top-k, sample with the supplied generator and append. Support optional per-row EOS: finished rows append EOS while other rows continue; stop when all finish. Return original prompt plus generated IDs. No gradients."""
-        raise NotImplementedError("GPT.generate")
+        """Append sampled tokens to nonempty prompts, stopping on EOS or length."""
+        # Validate generation settings before changing the model's mode.
+        if idx.ndim != 2 or idx.shape[0] == 0 or idx.shape[1] == 0:
+            raise ValueError("prompts must be nonempty [batch, sequence] tensors")
+        if idx.dtype not in (torch.int32, torch.int64):
+            raise ValueError("prompts must contain integer token IDs")
+        if type(max_new_tokens) is not int or max_new_tokens < 0:
+            raise ValueError("max_new_tokens must be a nonnegative integer")
+        if (isinstance(temperature, bool) or not isinstance(temperature, (int, float))
+                or not math.isfinite(temperature) or temperature <= 0):
+            raise ValueError("temperature must be finite and positive")
+        if top_k is not None and (type(top_k) is not int or top_k <= 0):
+            raise ValueError("top_k must be a positive integer or None")
+        if eos_id is not None and (type(eos_id) is not int
+                                   or not 0 <= eos_id < self.config.vocab_size):
+            raise ValueError("eos_id must be a valid vocabulary ID or None")
+
+        was_training = self.training
+        self.eval()
+        try:
+            # Track newly generated EOS independently for each row in the batch.
+            finished = torch.zeros(idx.shape[0], dtype=torch.bool, device=idx.device)
+            for _ in range(max_new_tokens):
+                # Crop only the model's input; keep the full prompt in the result.
+                context = idx[:, -self.config.block_size:]
+                logits, _ = self(context)
+                # The last position predicts the next token for each sequence.
+                logits = logits[:, -1, :] / temperature
+
+                if top_k is not None:
+                    # Keep at most k candidates; top-k=1 uses greedy tie-breaking.
+                    if top_k == 1:
+                        indices = logits.argmax(dim=-1, keepdim=True)
+                        values = logits.gather(-1, indices)
+                    else:
+                        values, indices = torch.topk(
+                            logits, min(top_k, logits.shape[-1]), dim=-1)
+                    logits = torch.full_like(logits, float("-inf")).scatter(
+                        -1, indices, values)
+
+                probabilities = F.softmax(logits, dim=-1)
+                next_token = torch.multinomial(
+                    probabilities, num_samples=1, generator=generator)
+                if eos_id is not None:
+                    # Finished rows append EOS while unfinished rows keep sampling.
+                    next_token = next_token.masked_fill(finished[:, None], eos_id)
+                    finished = finished | (next_token[:, 0] == eos_id)
+                idx = torch.cat((idx, next_token), dim=1)
+                if eos_id is not None and finished.all():
+                    break
+            return idx
+        finally:
+            # Restore the previous mode even if forward or sampling raises an error.
+            self.train(was_training)

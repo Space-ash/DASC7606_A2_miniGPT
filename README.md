@@ -4,16 +4,24 @@ DASC7606 Assignment 2 的个人工作区，已同步官方 v1.1.1（2026-11-13�
 
 **本项目报告仍保留 4–5 页，按所有者于 2026-11-13 再次确认的要求。** 最新公开 v1.1.1 仍规定主报告最多 2 页，两者存在冲突；这里不把 4–5 页描述为教师公开规定，最终请按 Moodle/教师确认的要求提交。官方原文保留在 `docs/UPSTREAM_README.md`、`RUBRIC.md` 和更新后的 PDF。
 
-当前状态：保留 `src/model.py` 的四个 TODO，尚未实现或训练模型。先完成 TODO，再运行测试与 smoke run。
+当前状态（2026-11-14）：`src/model.py` 的四个 TODO 已完成，44 项测试、CPU/CUDA smoke run 均通过。Baseline、4 层模型实验及较低学习率实验已在 HKU GPU Farm 完成，各训练 2,500 步 / 10,240,000 target tokens，并生成曲线、固定提示词续写和完整验证集 FP32 评估。本地备份已核对配置、源码、数据和 checkpoint 哈希。报告与最终提交包尚未完成。
 
-初始化检查（2026-11-06，Mac 本地 CPU）：已创建 `.venv`，Python 3.12.14 / PyTorch 2.10.0；`pip check` 与官方 `scripts/check_setup.py` 均通过，baseline 构造参数量为 13,891,584。此检查验证环境与固定数据，不代表 TODO 正确性测试通过；尚未运行公开模型测试、smoke training 或正式训练。CUDA 训练环境需在对应 GPU 机器另行配置。
+训练环境：NVIDIA GeForce RTX 4080 SUPER；Python 3.12.16 / PyTorch 2.10.0+cu130 / CUDA runtime 13.0；BF16 训练。本地 Windows 调试使用 Conda `dasc_2a`、Python 3.12.16 和 PyTorch 2.10.0+cpu。模型权重和完整 run 目录仅保留在本地/服务器，不进入 Git。
+
+| Run | 唯一主要改动 | 参数量 | Full FP32 CE | Full FP32 PPL |
+|---|---|---:|---:|---:|
+| baseline | 原始配置 | 13,891,584 | 2.299374 | 9.967941 |
+| model_depth4 | n_layer: 6 → 4 | 10,342,656 | 2.344976 | 10.433019 |
+| optimizer_lr3e4 | learning_rate: 0.0006 → 0.0003 | 13,891,584 | 2.442079 | 11.496918 |
+
+三组均在完整的 389,048 个公开验证目标 token 上评估。Baseline 当前具有最低的完整验证集 CE；单 seed 结果不支持统计显著性结论。实验假设、运行时间、显存、协议区别及命令见 [实验记录](docs/EXPERIMENTS.md)。网络结构图和 baseline 曲线的 PNG/SVG 见 [报告图片说明](report/figures/README.md)。
 
 ## 工作区使用
 
 ### Notebook 交互入口
 
 可直接打开 [MiniGPT 实验工作台](notebooks/Assignment2_Workbench.ipynb)，按中文说明联动现有脚本，后续在 GPU 上运行后展示学习曲线、学习率、单步吞吐、三组完整 FP32 评估和固定提示词续写。
-Notebook 目前未执行，所有安装、下载、测试、训练和打包开关默认关闭；模型的四个 TODO 仍需完成。使用方法见 [Notebook 说明](notebooks/README.md)。
+Notebook 目前未执行，所有安装、下载、测试、训练和打包开关默认关闭；上述实际训练通过 CLI 完成，模型的四个 TODO 已实现。使用方法见 [Notebook 说明](notebooks/README.md)。
 
 ```sh
 source .venv/bin/activate
@@ -24,12 +32,12 @@ python -m pip install -r requirements-notebook.txt
 Notebook 是辅助工具；正式提交仍按官方脚本打包代码、单一 checkpoint、三组证据和 4–5 页 PDF。
 
 - `src/`：模型、训练、生成、评估；从 `src/model.py` 开始。
-- `configs/`：官方 baseline 与 smoke 配置；baseline 保持不变。
+- `configs/`：原始 baseline、smoke 及两组单因素实验配置；baseline 保持不变。
 - `scripts/`、`tests/`：官方脚本与公开测试；新增 `scripts/download_data.py` 用于固定数据下载与校验。
 - `data/`：本地固定数据；二进制文件、分词器、manifest 不上传 Git。
 - `report/`：报告源文件；最终导出到根目录 `report.pdf`。
 - `outputs/`：训练结果与 checkpoint；`work/`：临时下载与日志；均不上传 Git。
-- `.venv/`：本地 Python 环境，不上传 Git。VS Code 默认使用该环境。
+- 本地 Python 环境不上传 Git。当前 Windows VS Code 配置使用 Conda `dasc_2a`；其他机器按实际环境选择解释器。
 
 本地 Python 3.12 环境激活后执行：
 
@@ -46,14 +54,14 @@ python scripts/check_setup.py
 ```
 
 下载脚本固定使用官方 v1.0.0 数据，验证归档和数据文件 SHA-256；遇到已有文件被修改时会停止。
-GPU 机器应单独安装匹配硬件的 PyTorch CUDA 构建；本地 Mac 使用 CPU，官方脚本不支持 MPS。
+GPU 机器应单独安装与驱动兼容的 PyTorch CUDA 构建；CPU 可用于本地测试，官方脚本不支持 MPS。
 
-先在 [实验记录表](docs/EXPERIMENTS.md) 写下两个实验的假设，再复制 baseline 配置分别创建实验 YAML。示例：
+以下为三组实际训练的复现命令（在已配置的 CUDA 环境执行；每个新 run 需要空的输出目录）。两组实验分别相对原始 baseline 只修改一个字段：
 
 ```sh
-# 创建相应配置之后运行；两个实验均与原始 baseline 比较。
-python -m src.train --config configs/model_experiment.yaml --out_dir outputs/model_experiment --device cuda
-python -m src.train --config configs/optimizer_experiment.yaml --out_dir outputs/optimizer_experiment --device cuda
+python -m src.train --config configs/baseline.yaml --out_dir outputs/baseline --device cuda
+python -m src.train --config configs/model_depth4.yaml --out_dir outputs/model_depth4 --device cuda
+python -m src.train --config configs/optimizer_lr3e4.yaml --out_dir outputs/optimizer_lr3e4 --device cuda
 ```
 
 - [2026-11-13 更新对照](docs/UPSTREAM_UPDATE_2026-11-13.md)

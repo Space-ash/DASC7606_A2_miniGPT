@@ -20,7 +20,7 @@ python -m pip install -r requirements-notebook.txt
 1. 在 GPU Notebook 环境打开此文件，选择可运行官方配置的 CUDA GPU；符合要求的 Colab T4/BF16 运行可接受，不要求原生 BF16 硬件支持。
 2. 没有项目时，在第 1 节设置 `CLONE_IF_MISSING = True`，或填写已有项目的 `PROJECT_DIR`。
 3. 按 GPU 硬件安装适配的 PyTorch 2.10.0；按需打开依赖安装、固定数据下载和 setup 检查。
-4. 先在 `src/model.py` 完成四个 TODO，再运行测试和 smoke run。
+4. `src/model.py` 的四个 TODO 已完成；在新的 GPU 环境仍需先运行测试和 smoke run。
 5. 填写实验假设和单一改动，准备实验 YAML；分别开启三次训练开关。
 6. 完成后选择 `POSTPROCESS_RUNS`，生成曲线、统一提示词续写和完整 FP32 验证评估。
 7. 运行展示单元格，查看学习曲线、学习率、记录步的吞吐、评估对比及故事续写；它们只读取输出文件。
